@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": { 
+        "location": { "value": "" },
+        "resourceGroup": { "value": "" },
+        "subscriptionId": { "value": "" },
+        "classification": { "value": ""},
+        "storageAcctName": { "value": "" },
+        "storageAccountType": { "value": "Standard_LRS" },
+        "allowedSubnet": { "value": "/subscriptions/[SUBSCRIPTION_GUID]/resourceGroups/[RG_NAME]/providers/Microsoft.Network/virtualNetworks/[VNET_NAME]/subnets/[SUBNET_NAME]" },
+        "allowedIp": { "value": "" },
+        "dataLakeFileSystem": {
+            "value": [
+                {
+                    "folder": "testroot",
+                    "access": [
+                        { "userId": "test", "accessLevel": "X" }
+                    ]
+                },
+                {
+                    "folder": "testroot/sample1",
+                    "access": [
+                        { "userId": "", "accessLevel": "RWX" }
+                    ]
+                }
+            ]
+        }
+    }
+}

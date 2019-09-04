@@ -1,0 +1,74 @@
+# Pipeline trigger
+trigger:
+  branches:
+    include:
+    - master
+    - releases/*
+  paths:
+    include:
+    - parameters/*
+    - templates/*
+
+# Update these variables to match your environment
+variables:
+- group: 'pipeline-automation-credentials'
+- name: 'projectName'
+  value: 'AzureOps'
+- name: 'buildPipelineName'
+  value: 'gitops-build'
+- name:  'subscriptionId'
+  value: 'cecea5c9-0754-4a7f-b5a9-46ae68dcafd3'
+
+stages:
+- stage: Release
+  jobs:
+  - deployment: DeployAzureResources
+    displayName: 'Deploy Azure Resources'
+    pool:
+      vmImage: 'vs2017-win2016'
+    environment: 'test-environment'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Retrieve ARM templates'
+            inputs:
+              buildType: 'specific'
+              project: '$(projectName)'
+              pipeline: '$(buildPipelineName)'
+              buildVersionToDownload: 'latest'
+              downloadType: 'single'
+              artifactName: 'deployments'
+              downloadPath: '$(System.ArtifactsDirectory)'
+          - task: PowerShell@2
+            displayName: 'Download automation scripts'
+            name: 'downloadAutomationScripts'
+            inputs:
+              targetType: 'inline'
+              script: |
+                ls
+                # Download automation scripts
+                $url = "https://github.com/travisnielsen/azure-gitops"
+                # $url = "https://$env:SYSTEM_ACCESSTOKEN@$url"
+
+                Write-Host "Fetching from $url"
+
+                # Need to use silent mode for git. Otherwise, the command will fail
+                # See: https://github.com/Microsoft/azure-pipelines-image-generation/issues/740
+                git clone -q $url
+
+                # Move invoke-pester script to root
+                Move-Item -Path "azure-gitops\\create-deployments.ps1" -Destination "."
+                ls
+          - task: PowerShell@2
+            displayName: 'Run Deployments'
+            name: 'runDeployments'
+            inputs:
+              filePath: 'create-deployments.ps1'
+              arguments: '-ArtifactFolderPath "$(System.ArtifactsDirectory)"'
+            env:
+              APP_ID: $(servicePrincipalId)
+              APP_SECRET: $(servicePrincipalPwd)
+              SUBSCRIPTION_ID: $(subscriptionId)
+              TENANT_ID: $(tenantId)

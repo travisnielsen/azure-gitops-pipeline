@@ -1,0 +1,17 @@
+# Mac OS
+.DS_Store
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+
+# test scripts
+wba-automation
+/wba-automation/*
+
+*.ps1
+*.xml

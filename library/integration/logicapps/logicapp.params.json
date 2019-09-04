@@ -1,0 +1,11 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location": { "value": "centralus"},
+      "resourceGroup": { "value": "trniel-logicapptest" },
+      "subscriptionId": { "value": "" },
+      "logicAppName": { "value": "trniel-test"},
+      "azurequeues_name": {"value": "azurequeues"}
+    }
+  }

@@ -1,0 +1,17 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": { 
+        "location": { "value": "centralus" },
+        "resourceGroup": { "value": "" },
+        "subscriptionId": { "value": "" },
+        "storageAcctName": { "value": "" },
+        "storageAccountType": { "value": "Standard_LRS" },
+        "allowedSubnet": { "value": "/subscriptions/[SUBSCRIPTION_GUID]/resourceGroups/[RG_NAME]/providers/Microsoft.Network/virtualNetworks/[VNET_NAME]/subnets/[SUBNET_NAME]" },
+        "allowedIp": { "value": "" },
+        "keyVaultUri": { "value": "https://[VAULT_NAME].vault.azure.net/"}, 
+        "keyName": { "value": ""},
+        "keyVersion": { "value": "" }   
+    }
+}
+  

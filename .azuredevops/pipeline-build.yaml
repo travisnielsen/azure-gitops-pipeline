@@ -1,0 +1,92 @@
+trigger: none
+variables:
+- group: 'pipeline-automation-credentials'
+- name: 'rootFolder'
+  value: 'azure-infra'
+- name:  'subscriptionId'
+  value: 'cecea5c9-0754-4a7f-b5a9-46ae68dcafd3'
+stages:
+- stage: Build
+  displayName: 'This is the build stage'
+  jobs:
+  - job: BuildJob
+    pool:
+      vmImage: 'vs2017-win2016'
+    continueOnError: true
+    steps:
+    - task: PowerShell@2
+      displayName: 'Download test scripts'
+      name: 'downloadTestScripts'
+      inputs:
+        targetType: 'inline'
+        script: |
+          ls
+          # Download automation scripts
+          $url = "https://github.com/travisnielsen/azure-gitops"
+          # $url = "https://$env:SYSTEM_ACCESSTOKEN@$url"
+
+          Write-Host "Fetching from $url"
+
+          # Need to use silent mode for git. Otherwise, the command will fail
+          # See: https://github.com/Microsoft/azure-pipelines-image-generation/issues/740
+          git clone -q $url
+
+          # Move invoke-pester script to root
+          Move-Item -Path "azure-gitops\\invoke-pester.prebuild.ps1" -Destination "."
+          ls
+    - task: PowerShell@2
+      displayName: 'Identify deployments'
+      name: 'identifyDeployments'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $deploymentFiles = ""
+          $editedFiles = @( git diff HEAD HEAD~ --name-only )
+          Write-Host "Edited files:"
+          Write-Host $editedFiles
+          
+          $editedFilesFiltered = $editedFiles -match "parameters/*|templates/*"
+          
+          foreach ($file in $editedFilesFiltered) {
+          
+              Write-Host "Filtered file: $file"
+          
+              # check if file exists in the directory (filter out deletions)
+              $exists = Test-Path $file -PathType Leaf
+          
+              if ($exists) {
+                  Write-Host "Identified update file: $file"
+                  $deploymentFiles += $file
+                  $deploymentFiles += ","
+              } else {
+                  Write-Host "Deleted file: $file"
+              }
+          }
+
+          $deploymentFiles = $deploymentFiles.TrimEnd(",")
+          Write-Host "Deployment files: $deploymentFiles" 
+          Write-Output "##vso[task.setvariable variable=deploymentFiles]${deploymentFiles}"
+    - task: PowerShell@2
+      displayName: 'Run Pester tests'
+      name: 'runPesterTests'
+      inputs:
+        filePath: 'invoke-pester.prebuild.ps1'
+        arguments: '-RootFolder "$(rootFolder)" -DeploymentFiles "$(deploymentFiles)"'
+      env:
+        APP_ID: $(servicePrincipalId)
+        APP_SECRET: $(servicePrincipalPwd)
+        SUBSCRIPTION_ID: $(subscriptionId)
+        TENANT_ID: $(tenantId)
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      name: 'publishTestResults'
+      inputs:
+        testResultsFormat: 'NUnit'
+        testResultsFiles: 'tests/*.xml'
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+        mergeTestResults: false
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: deployments'
+      inputs:
+        pathtoPublish: '$(System.DefaultWorkingDirectory)/stage'
+        artifactName: 'deployments'
