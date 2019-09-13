@@ -69,6 +69,7 @@ stages:
     - task: PowerShell@2
       displayName: 'Run Pester tests'
       name: 'runPesterTests'
+      failOnStderr: true
       inputs:
         filePath: 'invoke-pester.prebuild.ps1'
         arguments: '-RootFolder "$(rootFolder)" -DeploymentFiles "$(deploymentFiles)"'
