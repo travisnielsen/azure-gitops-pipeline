@@ -85,6 +85,7 @@ stages:
         testResultsFormat: 'NUnit'
         testResultsFiles: 'tests/*.xml'
         searchFolder: '$(System.DefaultWorkingDirectory)'
+        failTaskOnFailedTests: true
         mergeTestResults: false
     - task: PublishBuildArtifacts@1
       displayName: 'Publish Artifact: deployments'
